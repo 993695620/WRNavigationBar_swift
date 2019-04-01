@@ -261,10 +261,10 @@ extension UINavigationController: WRFatherAwakeProtocol
         setNeedsNavigationBarUpdate(tintColor: newTintColor)
         
         // change navBarTitleColor
-        let fromTitleColor = fromVC?.navBarTitleColor ?? WRNavigationBar.defaultNavBarTitleColor
-        let toTitleColor = toVC?.navBarTitleColor ?? WRNavigationBar.defaultNavBarTitleColor
-        let newTitleColor = WRNavigationBar.middleColor(fromColor: fromTitleColor, toColor: toTitleColor, percent: progress)
-        setNeedsNavigationBarUpdate(titleColor: newTitleColor)
+//        let fromTitleColor = fromVC?.navBarTitleColor ?? WRNavigationBar.defaultNavBarTitleColor
+//        let toTitleColor = toVC?.navBarTitleColor ?? WRNavigationBar.defaultNavBarTitleColor
+//        let newTitleColor = WRNavigationBar.middleColor(fromColor: fromTitleColor, toColor: toTitleColor, percent: progress)
+//        setNeedsNavigationBarUpdate(titleColor: newTitleColor)
         
         // change navBar _UIBarBackground alpha
         let fromBarBackgroundAlpha = fromVC?.navBarBackgroundAlpha ?? WRNavigationBar.defaultBackgroundAlpha
@@ -313,6 +313,7 @@ extension UINavigationController: WRFatherAwakeProtocol
     // swizzling system method: popToViewController
     @objc func wr_popToViewController(_ viewController: UIViewController, animated: Bool) -> [UIViewController]?
     {
+        setNeedsNavigationBarUpdate(titleColor: viewController.navBarTitleColor)
         var displayLink:CADisplayLink? = CADisplayLink(target: self, selector: #selector(popNeedDisplay))
         // UITrackingRunLoopMode: 界面跟踪 Mode，用于 ScrollView 追踪触摸滑动，保证界面滑动时不受其他 Mode 影响
         // NSRunLoopCommonModes contains kCFRunLoopDefaultMode and UITrackingRunLoopMode
@@ -568,10 +569,8 @@ extension UIViewController: WRAwakeProtocol
 //                let navBar = customNavBar as! UINavigationBar
 //                navBar.wr_setBackgroundColor(color: newValue)
             }
-            else
-            {
-                let isRootViewController = self.navigationController?.viewControllers.first == self
-                if (pushToCurrentVCFinished == true || isRootViewController == true) && pushToNextVCFinished == false {
+            else {
+                if canUpdateNavBarBarTintColorOrBackgroundAlpha == true {
                     navigationController?.setNeedsNavigationBarUpdate(barTintColor: newValue)
                 }
             }
@@ -593,11 +592,20 @@ extension UIViewController: WRAwakeProtocol
 //                let navBar = customNavBar as! UINavigationBar
 //                navBar.wr_setBackgroundAlpha(alpha: newValue)
             }
-            else
-            {
-                if pushToCurrentVCFinished == true && pushToNextVCFinished == false {
+            else {
+                if canUpdateNavBarBarTintColorOrBackgroundAlpha == true {
                     navigationController?.setNeedsNavigationBarUpdate(barBackgroundAlpha: newValue)
                 }
+            }
+        }
+    }
+    private var canUpdateNavBarBarTintColorOrBackgroundAlpha:Bool {
+        get {
+            let isRootViewController = self.navigationController?.viewControllers.first == self
+            if (pushToCurrentVCFinished == true || isRootViewController == true) && pushToNextVCFinished == false {
+                return true
+            } else {
+                return false
             }
         }
     }
@@ -734,6 +742,10 @@ extension UIViewController: WRAwakeProtocol
     
     @objc func wr_viewDidAppear(_ animated: Bool)
     {
+        
+        if self.navigationController?.viewControllers.first != self {
+            self.pushToCurrentVCFinished = true
+        }
         if canUpdateNavigationBar() == true
         {
             if let navBarBgImage = navBarBackgroundImage {
@@ -753,9 +765,10 @@ extension UIViewController: WRAwakeProtocol
     {
         let viewFrame = view.frame
         let maxFrame = UIScreen.main.bounds
-        let minFrame = CGRect(x: 0, y: WRNavigationBar.navBarBottom(), width: WRNavigationBar.screenWidth(), height: WRNavigationBar.screenHeight()-WRNavigationBar.navBarBottom())
+        let middleFrame = CGRect(x: 0, y: WRNavigationBar.navBarBottom(), width: WRNavigationBar.screenWidth(), height: WRNavigationBar.screenHeight()-WRNavigationBar.navBarBottom())
+        let minFrame = CGRect(x: 0, y: WRNavigationBar.navBarBottom(), width: WRNavigationBar.screenWidth(), height: WRNavigationBar.screenHeight()-WRNavigationBar.navBarBottom()-WRNavigationBar.tabBarHeight())
         // 蝙蝠🦇
-        let isBat = viewFrame.equalTo(maxFrame) || viewFrame.equalTo(minFrame)
+        let isBat = viewFrame.equalTo(maxFrame) || viewFrame.equalTo(middleFrame) || viewFrame.equalTo(minFrame)
         if self.navigationController != nil && isBat == true {
             return true
         } else {
@@ -924,6 +937,9 @@ extension WRNavigationBar
     class func navBarBottom() -> Int {
         return self.isIphoneX() ? 88 : 64;
     }
+    class func tabBarHeight() -> Int {
+        return self.isIphoneX() ? 83 : 49;
+    }
     class func screenWidth() -> Int {
         return Int(UIScreen.main.bounds.size.width)
     }
@@ -955,15 +971,18 @@ public protocol WRFatherAwakeProtocol: class
 class NothingToSeeHere
 {
     static func harmlessFunction(){
-        let typeCount = Int(objc_getClassList(nil, 0))
-        let  types = UnsafeMutablePointer<AnyClass?>.allocate(capacity: typeCount)
-        let autoreleaseintTypes = AutoreleasingUnsafeMutablePointer<AnyClass>(types)
-        objc_getClassList(autoreleaseintTypes, Int32(typeCount)) //获取所有的类
-        for index in 0 ..< typeCount {
-            (types[index] as? WRAwakeProtocol.Type)?.wrAwake() //如果该类实现了SelfAware协议，那么调用 awake 方法
-            (types[index] as? WRFatherAwakeProtocol.Type)?.fatherAwake()
-        }
-        types.deallocate(capacity: typeCount)
+//        let typeCount = Int(objc_getClassList(nil, 0))
+//        let  types = UnsafeMutablePointer<AnyClass?>.allocate(capacity: typeCount)
+//        let autoreleaseintTypes = AutoreleasingUnsafeMutablePointer<AnyClass>(types)
+//        objc_getClassList(autoreleaseintTypes, Int32(typeCount)) //获取所有的类
+//        for index in 0 ..< typeCount {
+//            (types[index] as? WRAwakeProtocol.Type)?.wrAwake() //如果该类实现了SelfAware协议，那么调用 awake 方法
+//            (types[index] as? WRFatherAwakeProtocol.Type)?.fatherAwake()
+//        }
+//        types.deallocate(capacity: typeCount)
+        UINavigationBar.wrAwake()
+        UIViewController.wrAwake()
+        UINavigationController.fatherAwake()
     }
 }
 

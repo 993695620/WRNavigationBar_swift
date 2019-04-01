@@ -1,3 +1,4 @@
+
 ![image](https://github.com/wangrui460/WRNavigationBar/raw/master/screenshots/WRNavigationBar.png)
 
 [For Objective-C：https://github.com/wangrui460/WRNavigationBar](https://github.com/wangrui460/WRNavigationBar)
@@ -75,6 +76,12 @@ UIColor.defaultShadowImageHidden = true
 
 
 ## Update
+- **2017.12.09**
+解决问题：解决导航栏颜色和标题颜色改变失败的bug
+
+- **2017.12.09**
+解决问题：解决点击返回按钮导航栏标题颜色闪烁的问题
+
 -**2017.11.29**-
 更新：解决部分用户设置导航栏无效的问题~
 
@@ -126,7 +133,7 @@ UIColor.defaultShadowImageHidden = true
 # Contact me
 - Weibo: [@wangrui460](http://weibo.com/wangrui460)
 - Email:  wangruidev@gmail.com
-- QQ：1204607318
+- QQ：1204607318 （基本不用）
 
 # License
 
